@@ -59,7 +59,7 @@ func (s *Sample) Score(ctx context.Context, state *framework.CycleState, p *v1.P
 
 	// 计算ECM指标的得分
 	// v1 := hostinfo.Power_limit - hostinfo.Power
-	ecmScore := 100 - (hostinfo.Power/hostinfo.Power_limit*20 + hostinfo.Energy_cost*16)
+	ecmScore := 100 - (hostinfo.Power/hostinfo.Power_limit*200 + hostinfo.Energy_cost*16)
 	klog.V(3).Infof(nodeName+"'s socre: %v", ecmScore)
 	klog.V(3).Infof("exit Score()!!!")
 	return int64(ecmScore), framework.NewStatus(framework.Success, "")
