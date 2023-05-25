@@ -2,41 +2,95 @@
 # 提供节点列表、功耗限制的字典、能耗价格的字典、cpu与内存使用率的字典、触发因子
 # 在创建的时候就通过读取文件来进行初始化，如果初始化失败就会报错
 # 额外实现的函数来进行迁移触发
+import configparser
+import os
+import mysqltool
+conf_url = os.path.expanduser("~/datacenter_energy/config/dataserv.conf")
 
 class clusterInfo:
     def __init__(self):
         # 节点列表，字典类型
-        self.nodelist = []
-        # 迁移队列，需要迁移的pod列表或者虚拟机列表，为字符串列表
+        self.nodelist = {}
+        # 节点状态：分为可用与不可用多种状态：关机、正常、开机但不可用、休眠中、未知
+        self.nodeStatus = {}
+        # 迁移队列，需要迁移的pod列表或者虚拟机列表，为字符串列表, 为pod名称列表
         self.migrateQueue = []
         # 功耗限制，字典类型
-        self.powerLimit = []
+        self.powerLimit = {}
         # 能耗价格，字典类型
-        self.energyCost = []
+        self.energyCost = {}
         # cpu最近时刻的负载，字典类型
-        self.cpuLoad = []
+        self.cpuLoad = {}
         # 内存最近时刻的负载，字典类型
-        self.memLoad = []
+        self.memLoad = {}
         # cpu超限次数，字典类型
-        self.cpuRecord = []
+        self.cpuRecord = {}
         # 内存超限次数，字典类型
-        self.memRecord = []
+        self.memRecord = {}
         # 功耗超限次数，字典类型
-        self.powerRecord = []
+        self.powerRecord = {}
 
+        # 在这儿实现载入逻辑
+        # 从conf读取主机列表、功耗限制、能耗价格
+        self.nodelist = self.readConf("hosts")
+        self.powerLimit = self.readConf("powerLimit")
+        self.energyCost = self.readConf("energyCost")
+
+        # 初始化超限记录
+        for key,value in self.nodelist.items():
+            self.cpuRecord[key] = 0
+            self.memRecord[key] = 0
+            self.powerRecord[key] = 0
+            self.nodeStatus[key] = self.getStatus(key, value)
+        # 需要更新 nodeStatus
+        db_tool = mysqltool.MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
+
+        
+    def getStatus(self, nodeName, ip):
+        # 更新方法？通过api的ping判断？
+        # 到底如何获取、存储状态？种植运行之后又如何做？通过文件吗？
+        # nodename , status, timestamp, 
+        # -1 表示未知， 0 表示down，1 表示正常，2 表示uncornd
+        status = -1
+        
+        return status
 
     def update(self):
-    # 通过读取实时数据，更新相关信息，更新触发因子
-    # 如果某些限制型信息更新了，那么要重新统计
+        # 通过读取实时数据，更新相关信息，更新触发因子
+        # 如果某些限制型信息更新了，那么要重新统计
         return
 
     def reload(self):
-    # 重新初始化，即重新从文件读取数据
+        # 重新初始化，即重新从文件读取数据
         self.__init__(self)
         return
 
     def getInfo(self):
-    # 输出相关信息，调试用
+        # 输出相关信息，调试用
+        print("host: ", self.nodelist)
+        print("energyCost: ", self.energyCost)
+        print("powerLimit: ", self.powerLimit)
+
+        print("cpuRecord: ", self.cpuRecord)
+        print("memRecord: ", self.memRecord)
+        print("powerRecord: ", self.powerRecord)
+        print("nodeStatus: ", self.nodeStatus)
+        print("migrateQueue: ", self.migrateQueue)
         return
     
-    
+    def readConf(self, para):
+        try:
+            # 读取 dataserv.conf 文件
+            conf = configparser.ConfigParser()
+            conf.read(conf_url)
+            # 获取 [para] 部分的列表项
+            result = conf.items(para)
+            return dict(result)
+        except:
+            print("Error: Failed to load dataserv.conf file")
+
+
+c = clusterInfo()
+c.getInfo()
+
+# 这里需要不需要用单台主机的方法呢? 最好还是不要, 因为这样会增加工作量, 主机列表信息都是可以统一读取的, 而pod则需要单独考虑
