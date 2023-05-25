@@ -12,6 +12,7 @@ sys.path.append(home_dir, '/container_migrate/migrate', 'migrate.py')
 import migrate.apiserver as mAPI
 
 import clusterInfo
+import podInfo
 migrateQueue = [] # 迁移队列, 字符串列表
 
 def selectPodfromHost(pod_set, hostname):
@@ -56,19 +57,30 @@ def beginMigrate():
     if len(migrateQueue) == 0:
         return
     
+    # 还需要考虑是否要真正的迁移，要处理防误触
     
     migrateQueue = mAPI.migratePod(migrateQueue)
-
     return
 
+def getPodFromHost(host_name, ip):
+    # 通过rpc来获得host_name上的所有pod信息，这些信息都是podInfo类型的
+    pod_list = []
+    # 从数据库中获取也是可以的
+    return pod_list
 
-def getPodList():
+def getPodList(host_list):
     # 构造字典, key为节点名称, value为podInfo类型的列表
-    pass
+    # 从哪儿获得数据呢？从api
+    pod_list = []
+    
+    for key, value in host_list.item():
+        pod_list += getPodFromHost(key, value)
+    return pod_list
 
 def run():
+    # 用于实现迁移触发流程，循环检查是否满足触发条件
     cluster = clusterInfo()
-    pod_list = getPodList()
+    pod_list = getPodList(cluster.hostList)
 
     while True:
         cluster.update()
@@ -79,20 +91,3 @@ def run():
         time.sleep(10)
 
 
-
-
-
-
-
-
-
-
-cluster = clusterInfo()
-cluster.getInfo()
-cluster.update()
-if(checkCost(cluster)):
-    # 标记主机 ?
-    beginMigrate()
-if(checkPowerLimit(cluster)):
-    # 标记主机 ?
-    beginMigrate()
