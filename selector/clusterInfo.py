@@ -4,18 +4,21 @@
 # 额外实现的函数来进行迁移触发
 import configparser
 import os
-import mysqltool
+import sys
+
+home_dir = os.path.expanduser("~")
+sys.path.append(home_dir, '/container_migrate/utils', 'mysqltool.py')
+from utils.mysqltool import MySQLTool
+
 conf_url = os.path.expanduser("~/datacenter_energy/config/dataserv.conf")
 
 class clusterInfo:
     def __init__(self):
         # 节点列表，字典类型
-        self.nodelist = {}
+        self.hostlist = {}
         # 节点状态：分为可用与不可用多种状态：关机、正常、开机但不可用、休眠中、未知
-        self.nodeStatus = {}
+        self.hostStatus = {}
         # 迁移队列，需要迁移的pod列表或者虚拟机列表，为字符串列表, 为pod名称列表
-        self.migrateQueue = []
-        # 功耗限制，字典类型
         self.powerLimit = {}
         # 能耗价格，字典类型
         self.energyCost = {}
@@ -32,24 +35,24 @@ class clusterInfo:
 
         # 在这儿实现载入逻辑
         # 从conf读取主机列表、功耗限制、能耗价格
-        self.nodelist = self.readConf("hosts")
+        self.hostlist = self.readConf("hosts")
         self.powerLimit = self.readConf("powerLimit")
         self.energyCost = self.readConf("energyCost")
 
         # 初始化超限记录
-        for key,value in self.nodelist.items():
+        for key,value in self.hostlist.items():
             self.cpuRecord[key] = 0
             self.memRecord[key] = 0
             self.powerRecord[key] = 0
-            self.nodeStatus[key] = self.getStatus(key, value)
-        # 需要更新 nodeStatus
-        db_tool = mysqltool.MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
-
+            self.hostStatus[key] = self.getStatus(key, value)
+        # 需要更新 hostStatus
+        db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
+        db_tool.close()
         
-    def getStatus(self, nodeName, ip):
+    def getStatus(self, hostName, ip):
         # 更新方法？通过api的ping判断？
         # 到底如何获取、存储状态？种植运行之后又如何做？通过文件吗？
-        # nodename , status, timestamp, 
+        # hostname , status, timestamp, 
         # -1 表示未知， 0 表示down，1 表示正常，2 表示uncornd
         status = -1
         
@@ -67,15 +70,14 @@ class clusterInfo:
 
     def getInfo(self):
         # 输出相关信息，调试用
-        print("host: ", self.nodelist)
+        print("host: ", self.hostlist)
         print("energyCost: ", self.energyCost)
         print("powerLimit: ", self.powerLimit)
 
         print("cpuRecord: ", self.cpuRecord)
         print("memRecord: ", self.memRecord)
         print("powerRecord: ", self.powerRecord)
-        print("nodeStatus: ", self.nodeStatus)
-        print("migrateQueue: ", self.migrateQueue)
+        print("hostStatus: ", self.hostStatus)
         return
     
     def readConf(self, para):
@@ -94,3 +96,4 @@ c = clusterInfo()
 c.getInfo()
 
 # 这里需要不需要用单台主机的方法呢? 最好还是不要, 因为这样会增加工作量, 主机列表信息都是可以统一读取的, 而pod则需要单独考虑
+# 所有这里只需要发出迁移命令, 给出迁移列表, 需要禁用的主机列表就可以了, 迁移、禁用、解禁都由 apiserver 完成
