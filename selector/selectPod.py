@@ -63,7 +63,7 @@ def beginMigrate():
     return
 
 def getPodFromHost(host_name, ip):
-    # 通过rpc来获得host_name上的所有pod信息，这些信息都是podInfo类型的
+    # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
     pod_list = []
     # 从数据库中获取也是可以的
     return pod_list

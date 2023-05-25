@@ -1,6 +1,3 @@
-
-
-
 # 负责统计pod相关的信息, 重点是是pod的功耗、所在主机、资源利用率、其他标签信息等等等
 class podInfo:
     def __init__(self):
