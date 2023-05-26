@@ -7,8 +7,8 @@ import os
 import sys
 
 home_dir = os.path.expanduser("~")
-sys.path.append(home_dir, '/container_migrate/utils', 'mysqltool.py')
-from utils.mysqltool import MySQLTool
+sys.path.append(home_dir+'/container_migrate/utils')
+from mysqltool import MySQLTool
 
 conf_url = os.path.expanduser("~/datacenter_energy/config/dataserv.conf")
 
@@ -92,8 +92,8 @@ class clusterInfo:
             print("Error: Failed to load dataserv.conf file")
 
 
-c = clusterInfo()
-c.getInfo()
+# c = clusterInfo()
+# c.getInfo()
 
 # 这里需要不需要用单台主机的方法呢? 最好还是不要, 因为这样会增加工作量, 主机列表信息都是可以统一读取的, 而pod则需要单独考虑
 # 所有这里只需要发出迁移命令, 给出迁移列表, 需要禁用的主机列表就可以了, 迁移、禁用、解禁都由 apiserver 完成

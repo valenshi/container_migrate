@@ -6,15 +6,16 @@
 import os
 import sys
 import time
+import pymysql
 
 home_dir = os.path.expanduser("~")
-sys.path.append(home_dir, '/container_migrate/migrate', 'migrate.py')
-import migrate.apiserver as mAPI
-sys.path.append(home_dir, '/container_migrate/utils', 'mysqltool.py')
-from utils.mysqltool import MySQLTool
+sys.path.append(home_dir+'/container_migrate/migrate')
+import apiserver as mAPI
+sys.path.append(home_dir+'/container_migrate/utils')
+from mysqltool import MySQLTool
 
-import clusterInfo
-import podInfo
+from clusterInfo import clusterInfo
+from podInfo import podInfo
 migrateQueue = [] # 迁移队列, 字符串列表
 
 def selectPodfromHost(pod_set, hostname):
@@ -72,23 +73,19 @@ def getPodFromHost(host_name, ip):
     # 从数据库中获取也是可以的
     db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
     # 还是需要做限制的，要去除过期数据
-    # select(self, table_name, columns=None, where=None, order_by=None, limit=None, group_by=None)
 
     # 这里还有一个视图，为 latest_poddata，针对每个pod仅显示一次
     
-    result = db_tool.select('poddata', columns=['*'], where="host_name='"+host_name+"'",
-                              group_by='pod_name')
-    
-    data_list = [dict(zip([column[0] for column in cursor.description], row)) 
-                for row in result]
-    
-    for dict in data_list:
+    result = db_tool.select('latest_poddata', columns=['*'])
+    for dict in result:
+        print(dict)
         pod = podInfo()
-        pod.podname = dict['pod_name']
+        pod.pod_name = dict['pod_name']
         pod.host_name = host_name
         pod.cpu_load = dict['cpu_load']
         pod.mem_load = dict['memory_load']
-        pod.power = 0
+        pod_list.append(pod)
+    # 需要更新power与status
     db_tool.close()
     return pod_list
 
@@ -114,4 +111,9 @@ def run():
         beginMigrate()
         time.sleep(10)
 
+def test():
+    for pod in getPodFromHost("node1", "1"):
+        pod.getInfo()
+        # print(pod)
 
+test()

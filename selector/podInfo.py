@@ -9,7 +9,12 @@ class podInfo:
         self.status = 0
 
     def getInfo(self):
-        pass
+        print(self.pod_name)
+        print(self.host_name)
+        print(self.power)
+        print(self.cpu_load)
+        print(self.mem_load)
+        print(self.status)
 
     def updata(self):
         # 主要是更新status
@@ -18,5 +23,4 @@ class podInfo:
     
 
 # 新建一个列表, 接着通过循环新建并加入
-podlist = []
-podlist.append(podInfo())
+

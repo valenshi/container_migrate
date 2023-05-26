@@ -95,6 +95,10 @@ class MySQLTool:
             print(f"Failed to delete data from table {table_name}. Error: {error}")
         finally:
             self.ping()
+    
+    def cursor(self):
+
+        return self.connection.cursor()
 
 
 # if __name__ == '__main__':
