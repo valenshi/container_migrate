@@ -34,13 +34,15 @@ class MySQLTool:
             print(f"Ping failed! Reconnecting due to {e}")
             self.connect()
 
-    def select(self, table_name, columns=None, where=None, order_by=None, limit=None):
+    def select(self, table_name, columns=None, where=None, order_by=None, limit=None, group_by=None):
         self.ping()
         try:
             with self.connection.cursor() as cursor:
                 sql = f"SELECT {','.join(columns) if columns else '*'} FROM {table_name}"
                 if where:
                     sql += f" WHERE {where}"
+                if group_by:
+                    sql += f" GROUP BY {group_by}"
                 if order_by:
                     sql += f" ORDER BY {order_by}"
                 if limit:
@@ -53,7 +55,6 @@ class MySQLTool:
             return None
         finally:
             self.ping()
-
     # 其它增删改操作方法，可以在其中调用 ping() 方法
     def insert(self, table_name, data):
         try:

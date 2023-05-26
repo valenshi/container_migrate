@@ -10,6 +10,8 @@ import time
 home_dir = os.path.expanduser("~")
 sys.path.append(home_dir, '/container_migrate/migrate', 'migrate.py')
 import migrate.apiserver as mAPI
+sys.path.append(home_dir, '/container_migrate/utils', 'mysqltool.py')
+from utils.mysqltool import MySQLTool
 
 import clusterInfo
 import podInfo
@@ -37,6 +39,8 @@ def checkPowerLimit(pod_list, cluser_info):
     for node in nodelist:
         migrateQueue += selectPodfromHost(pod_list[node], node)
     
+    # 除此之外还需要导出需要休眠的主机列表
+
     # 此时已经获得pod列表, 需要判断迁移列表是否为空 ?
     return len(migrateQueue)
 
@@ -66,6 +70,26 @@ def getPodFromHost(host_name, ip):
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
     pod_list = []
     # 从数据库中获取也是可以的
+    db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
+    # 还是需要做限制的，要去除过期数据
+    # select(self, table_name, columns=None, where=None, order_by=None, limit=None, group_by=None)
+
+    # 这里还有一个视图，为 latest_poddata，针对每个pod仅显示一次
+    
+    result = db_tool.select('poddata', columns=['*'], where="host_name='"+host_name+"'",
+                              group_by='pod_name')
+    
+    data_list = [dict(zip([column[0] for column in cursor.description], row)) 
+                for row in result]
+    
+    for dict in data_list:
+        pod = podInfo()
+        pod.podname = dict['pod_name']
+        pod.host_name = host_name
+        pod.cpu_load = dict['cpu_load']
+        pod.mem_load = dict['memory_load']
+        pod.power = 0
+    db_tool.close()
     return pod_list
 
 def getPodList(host_list):
