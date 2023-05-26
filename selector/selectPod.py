@@ -110,10 +110,3 @@ def run():
             migrateQueue += que
         beginMigrate()
         time.sleep(10)
-
-def test():
-    for pod in getPodFromHost("node1", "1"):
-        pod.getInfo()
-        # print(pod)
-
-test()

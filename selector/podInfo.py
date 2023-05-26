@@ -9,12 +9,12 @@ class podInfo:
         self.status = 0
 
     def getInfo(self):
-        print(self.pod_name)
-        print(self.host_name)
-        print(self.power)
-        print(self.cpu_load)
-        print(self.mem_load)
-        print(self.status)
+        print("pod_name: ", self.pod_name)
+        print("host_name: ", self.host_name)
+        print("power: ", self.power)
+        print("cpu_load: ", self.cpu_load)
+        print("mem_load: ", self.mem_load)
+        print("status: ", self.status)
 
     def updata(self):
         # 主要是更新status
