@@ -40,3 +40,12 @@ def unbanHost(host_list):
     pass
 
 
+def getStatus(pod):
+    # 通过pod name来获取其状态
+    # 分为running?pending?error?crash等等
+    pass
+
+def predictPower(cpu_load, mem_load):
+    # 通过调用预测脚本, 来统一预测实时功耗
+    # 直接将预测脚本内置进来, 这样会速度快一些
+    pass

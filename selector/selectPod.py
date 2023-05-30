@@ -84,6 +84,8 @@ def getPodFromHost(host_name, ip):
         pod.host_name = host_name
         pod.cpu_load = dict['cpu_load']
         pod.mem_load = dict['memory_load']
+        pod.status = mAPI.getStatus(pod.pod_name)
+        pod.power = mAPI.predictPower(pod.cpu_load, pod.mem_load)
         pod_list.append(pod)
     # 需要更新power与status
     db_tool.close()
@@ -110,3 +112,12 @@ def run():
             migrateQueue += que
         beginMigrate()
         time.sleep(10)
+
+
+def testgetPodFromHost():
+    result = getPodFromHost("node3","")
+    for pod in result:
+        pod.getInfo()
+
+
+testgetPodFromHost()
