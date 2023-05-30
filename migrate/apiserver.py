@@ -1,5 +1,6 @@
 #支持中文
 #导入包
+from kubernetes import client, config
 
 # 直接调用虚拟机迁移脚本或命令
 def migrateVM(vm_name, target_node):
@@ -40,12 +41,33 @@ def unbanHost(host_list):
     pass
 
 
-def getStatus(pod):
-    # 通过pod name来获取其状态
-    # 分为running?pending?error?crash等等
-    pass
+def getStatus(pod_name):
+    # Kubernetes中Pod的状态可以分为以下几种：
+    # Pending：Pod已被创建，但是尚未被调度到节点上运行。
+    # Running：Pod已经被调度到节点上并且正在运行中。
+    # Succeeded：Pod已经成功完成了所有工作。
+    # Failed：Pod已经完成了所有工作，但返回一个非零的退出码。
+    # Unknown：无法获取Pod的状态信息，通常是由于调度器或其他组件出现故障所致。
+    # 加载Kubeconfig文件
+
+    config.load_kube_config()
+
+    # 创建核心V1 API客户端
+    v1 = client.CoreV1Api()
+
+    # 检查Pod是否存在
+    try:
+        pod = v1.read_namespaced_pod(name=pod_name, namespace='default')
+    except client.rest.ApiException as e:
+        if e.status == 404:
+            return "Overdue"
+        else:
+            raise e
+
+    # 如果Pod存在，则返回其状态
+    return pod.status.phase
 
 def predictPower(cpu_load, mem_load):
-    # 通过调用预测脚本, 来统一预测实时功耗
-    # 直接将预测脚本内置进来, 这样会速度快一些
     pass
+
+# print(getStatus("test-scheduler-5659b79dc9-5bxdg"))

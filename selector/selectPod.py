@@ -73,12 +73,11 @@ def getPodFromHost(host_name, ip):
     # 从数据库中获取也是可以的
     db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
     # 还是需要做限制的，要去除过期数据
-
     # 这里还有一个视图，为 latest_poddata，针对每个pod仅显示一次
     
     result = db_tool.select('latest_poddata', columns=['*'])
     for dict in result:
-        print(dict)
+        # print(dict)
         pod = podInfo()
         pod.pod_name = dict['pod_name']
         pod.host_name = host_name
@@ -86,7 +85,8 @@ def getPodFromHost(host_name, ip):
         pod.mem_load = dict['memory_load']
         pod.status = mAPI.getStatus(pod.pod_name)
         pod.power = mAPI.predictPower(pod.cpu_load, pod.mem_load)
-        pod_list.append(pod)
+        if(pod.status != "Overdue"):
+            pod_list.append(pod)
     # 需要更新power与status
     db_tool.close()
     return pod_list
