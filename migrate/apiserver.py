@@ -1,6 +1,10 @@
 #支持中文
 #导入包
+#-- coding: UTF-8 --
+#!/usr/bin/env python3
 from kubernetes import client, config
+import xmlrpc.client
+
 
 # 直接调用虚拟机迁移脚本或命令
 def migrateVM(vm_name, target_node):
@@ -68,6 +72,20 @@ def getStatus(pod_name):
     return pod.status.phase
 
 def predictPower(cpu_load, mem_load):
-    pass
+    # 导入预测模块，减去静态功耗
+    # 创建服务器代理
+    # print("oooo:", cpu_load, mem_load)
+    try:
+        server = xmlrpc.client.ServerProxy("http://192.168.1.201:9926")
+        # 输入参数
+        # 调用方法
+        v1 = server.predictPower(cpu_load, mem_load)
+        v2 = server.predictPower(0, 0)
+        result = float(v1) - float(v2)
+        # print(result)
+    except Exception as e:
+        print(e)
+        return
+    return result
 
 # print(getStatus("test-scheduler-5659b79dc9-5bxdg"))

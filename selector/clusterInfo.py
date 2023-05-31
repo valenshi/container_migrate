@@ -15,7 +15,7 @@ conf_url = os.path.expanduser("~/datacenter_energy/config/dataserv.conf")
 class clusterInfo:
     def __init__(self):
         # 节点列表，字典类型
-        self.hostlist = {}
+        self.host_list = {}
         # 节点状态：分为可用与不可用多种状态：关机、正常、开机但不可用、休眠中、未知
         self.hostStatus = {}
         # 迁移队列，需要迁移的pod列表或者虚拟机列表，为字符串列表, 为pod名称列表
@@ -35,12 +35,12 @@ class clusterInfo:
 
         # 在这儿实现载入逻辑
         # 从conf读取主机列表、功耗限制、能耗价格
-        self.hostlist = self.readConf("hosts")
+        self.host_list = self.readConf("hosts")
         self.powerLimit = self.readConf("powerLimit")
         self.energyCost = self.readConf("energyCost")
 
         # 初始化超限记录
-        for key,value in self.hostlist.items():
+        for key,value in self.host_list.items():
             self.cpuRecord[key] = 0
             self.memRecord[key] = 0
             self.powerRecord[key] = 0
@@ -70,7 +70,7 @@ class clusterInfo:
 
     def getInfo(self):
         # 输出相关信息，调试用
-        print("host: ", self.hostlist)
+        print("host: ", self.host_list)
         print("energyCost: ", self.energyCost)
         print("powerLimit: ", self.powerLimit)
 

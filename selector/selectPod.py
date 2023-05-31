@@ -17,12 +17,15 @@ from mysqltool import MySQLTool
 from clusterInfo import clusterInfo
 from podInfo import podInfo
 migrateQueue = [] # 迁移队列, 字符串列表
+banHost = [] # 需要禁用的主机列表
+sleepHost = [] # 需要进入睡眠状态的主机列表
+
 
 def selectPodfromHost(pod_set, hostname):
     # pod_set: 某台主机上的 podInfo 类的列表
     # hostname: 主机名称
     # 从 hostname 主机上筛选出可以迁出的pod列表
-    
+    # 做迁移选择呗，按照cpu利用率升序即可，cpu相同则按照内存升序
     pass
 
 def checkPowerLimit(pod_list, cluser_info):
@@ -69,13 +72,14 @@ def beginMigrate():
 
 def getPodFromHost(host_name, ip):
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
+    # print(host_name, ip)
     pod_list = []
     # 从数据库中获取也是可以的
     db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
     # 还是需要做限制的，要去除过期数据
     # 这里还有一个视图，为 latest_poddata，针对每个pod仅显示一次
-    
-    result = db_tool.select('latest_poddata', columns=['*'])
+    # ALTER TABLE latest_poddata CHANGE node_name ip 
+    result = db_tool.select('latest_poddata', columns=['*'], where="node_name='"+host_name + "'")
     for dict in result:
         # print(dict)
         pod = podInfo()
@@ -96,14 +100,14 @@ def getPodList(host_list):
     # 从哪儿获得数据呢？从api
     pod_list = []
     
-    for key, value in host_list.item():
+    for key, value in host_list.items():
         pod_list += getPodFromHost(key, value)
     return pod_list
 
 def run():
     # 用于实现迁移触发流程，循环检查是否满足触发条件
     cluster = clusterInfo()
-    pod_list = getPodList(cluster.hostList)
+    pod_list = getPodList(cluster.host_list)
 
     while True:
         cluster.update()
@@ -115,9 +119,14 @@ def run():
 
 
 def testgetPodFromHost():
-    result = getPodFromHost("node3","")
-    for pod in result:
+    # result = getPodFromHost("node3","")
+    # 用于实现迁移触发流程，循环检查是否满足触发条件
+    cluster = clusterInfo()
+    pod_list = getPodList(cluster.host_list)
+
+    for pod in pod_list:
         pod.getInfo()
 
+    print(len(pod_list))
 
 testgetPodFromHost()
