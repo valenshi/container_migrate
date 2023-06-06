@@ -5,95 +5,166 @@
 import configparser
 import os
 import sys
-
+# 老师，那我就这个月中旬左右去深圳实习了，然后转正答辩之后再回来，可以吗
 home_dir = os.path.expanduser("~")
 sys.path.append(home_dir+'/container_migrate/utils')
 from mysqltool import MySQLTool
 
 conf_url = os.path.expanduser("~/datacenter_energy/config/dataserv.conf")
 
-class clusterInfo:
-    def __init__(self):
-        # 节点列表，字典类型
-        self.host_list = {}
+
+
+def readConf(para):
+    try:
+        # 读取 dataserv.conf 文件
+        conf = configparser.ConfigParser()
+        conf.read(conf_url)
+        # 获取 [para] 部分的列表项
+        result = conf.items(para)
+        return dict(result)
+    except:
+        print("Error: Failed to load dataserv.conf file")
+
+class Host:
+    # 单台主机的信息
+    # 提供单台主机的行为
+    # 定义行为与信息
+    def __init__(self, host_name):
+        # 列表类型,存放此主机上的Pod集合
+        self.pod_list = []
+
+
+
+        # 主机名称，字符串类型
+        self.host_name = host_name
+        # 节点ip，字符串类型
+        self.ip = ""
         # 节点状态：分为可用与不可用多种状态：关机、正常、开机但不可用、休眠中、未知
-        self.hostStatus = {}
-        # 迁移队列，需要迁移的pod列表或者虚拟机列表，为字符串列表, 为pod名称列表
-        self.powerLimit = {}
-        # 能耗价格，字典类型
-        self.energyCost = {}
-        # cpu最近时刻的负载，字典类型
-        self.cpuLoad = {}
-        # 内存最近时刻的负载，字典类型
-        self.memLoad = {}
-        # cpu超限次数，字典类型
-        self.cpuRecord = {}
-        # 内存超限次数，字典类型
-        self.memRecord = {}
-        # 功耗超限次数，字典类型
-        self.powerRecord = {}
+        self.host_status = "unkown"
+        # 功耗限制，为浮点类型
+        self.power_limit = 0.0
+        # 能耗价格，浮点类型
+        self.energy_cost = 0.0
+        # 节点功耗,浮点数
+        self.power = 0.0
+        # cpu最近时刻的负载百分比，浮点类型
+        self.cpu_load = 0.0
+        # 内存最近时刻的负载，浮点类型
+        self.mem_load = 0.0
+        # cpu超限次数，整数类型
+        self.cpu_record = 0
+        # 内存超限次数，整数类型
+        self.mem_record = 0
+        # 功耗超限次数，整数类型
+        self.power_record = 0
+        # 载入基本信息
+        self.reload()
 
-        # 在这儿实现载入逻辑
-        # 从conf读取主机列表、功耗限制、能耗价格
-        self.host_list = self.readConf("hosts")
-        self.powerLimit = self.readConf("powerLimit")
-        self.energyCost = self.readConf("energyCost")
+        # 如何记录超限的信息呢?通过十个大小的数组,使用循环指针赋值,每次超限了就赋值为1,数组之和就是超限次数
+        self.rd = []
+        self.rd.append([])
+        self.rd.append([])
+        self.rd.append([])
 
-        # 初始化超限记录
-        for key,value in self.host_list.items():
-            self.cpuRecord[key] = 0
-            self.memRecord[key] = 0
-            self.powerRecord[key] = 0
-            self.hostStatus[key] = self.getStatus(key, value)
-        # 需要更新 hostStatus
-        db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
-        db_tool.close()
-        
-    def getStatus(self, hostName, ip):
-        # 更新方法？通过api的ping判断？
-        # 到底如何获取、存储状态？种植运行之后又如何做？通过文件吗？
-        # hostname , status, timestamp, 
-        # -1 表示未知， 0 表示down，1 表示正常，2 表示uncornd
-        status = -1
-        
-        return status
-
+    # 更新操作
     def update(self):
-        # 通过读取实时数据，更新相关信息，更新触发因子
-        # 如果某些限制型信息更新了，那么要重新统计
-        return
+        # 就剩status了
+        # status不更新也行, 可以手动操作
+        # update最好每隔4s或者10s调用一次
+        # 需要更新 power, cpu_load、mem_load、cpu_record mem_record power_record
+        db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
+        result = db_tool.select('latest_nodedata', columns=['*'], where="node_name='"+self.host_name + "'")
+        db_tool.close()
 
+        dict = result[0]
+        self.power = float(dict['power'])
+        self.cpu_load = float(dict['cpu_load'])
+        self.mem_load = float(dict['memory_load'])
+        
+        # 更新记录数组
+        if self.power > self.power_limit*0.8:
+            self.rd[0].append(1)
+        else:
+            self.rd[0].append(0)
+        # 暂时设置利用率上限为75%
+        if self.cpu_load > 75:
+            self.rd[1].append(1)
+        else:
+            self.rd[1].append(0)
+        
+        if self.mem_load > 75:
+            self.rd[2].append(1)
+        else:
+            self.rd[2].append(0)
+        
+        # 更新record
+        if len(self.rd[0]) > 1:
+            self.power_record -= self.rd[0][0]
+            self.rd[0].pop(0)
+        self.power_record += self.rd[0][-1]
+        
+
+        if len(self.rd[1]) > 1:
+            self.cpu_record -= self.rd[1][0]
+            self.rd[1].pop(0)
+        self.cpu_record += self.rd[1][-1]
+        
+
+        if len(self.rd[2]) > 1:
+            self.mem_record -= self.rd[2][0]
+            self.rd[2].pop(0)
+        self.mem_record += self.rd[2][-1]
+
+        
+
+    # 从文件载入基本信息操作, 频率可能不高
     def reload(self):
-        # 重新初始化，即重新从文件读取数据
-        self.__init__(self)
-        return
+        # 从conf读取主机列表、功耗限制、能耗价格
+        self.ip = readConf("hosts")[self.host_name]
+        self.power_limit = float(readConf("powerLimit")[self.host_name])
+        self.energy_cost = float(readConf("energyCost")[self.host_name])
 
+    # 打印相关信息操作
     def getInfo(self):
-        # 输出相关信息，调试用
-        print("host: ", self.host_list)
-        print("energyCost: ", self.energyCost)
-        print("powerLimit: ", self.powerLimit)
-
-        print("cpuRecord: ", self.cpuRecord)
-        print("memRecord: ", self.memRecord)
-        print("powerRecord: ", self.powerRecord)
-        print("hostStatus: ", self.hostStatus)
-        return
+        print("host_name: ", self.host_name)
+        print("ip: ", self.ip)
+        print("power_limit: ", self.power_limit)
+        print("energy_cost: ", self.energy_cost)
+        print("host_status:", self.host_status)
+        print("power: ", self.power)
+        print("cpu_load: ", self.cpu_load)
+        print("mem_load: ", self.mem_load)
+        print("cpu_record: ", self.cpu_record)
+        print("mem_record: ",self.mem_record)
+        print("power_record: ", self.power_record)
+        print("------------------------END-------------------------")
     
-    def readConf(self, para):
-        try:
-            # 读取 dataserv.conf 文件
-            conf = configparser.ConfigParser()
-            conf.read(conf_url)
-            # 获取 [para] 部分的列表项
-            result = conf.items(para)
-            return dict(result)
-        except:
-            print("Error: Failed to load dataserv.conf file")
 
+# 使用流程:
+# 在新建好实例之后, 周期性的调用update即可
+class Cluster:
+    # 集群信息，包含多个主机，提供管理主机集合的操作
+    # 定义行为与信息
+    # 主机列表，包含所有主机
+    def __init__(self):
+        self.host_list = []
 
-# c = clusterInfo()
-# c.getInfo()
+        for it in readConf("hosts").items():
+            self.addHost(it[0]) # it[0]为主机名
+            # print(it[0])
 
-# 这里需要不需要用单台主机的方法呢? 最好还是不要, 因为这样会增加工作量, 主机列表信息都是可以统一读取的, 而pod则需要单独考虑
-# 所有这里只需要发出迁移命令, 给出迁移列表, 需要禁用的主机列表就可以了, 迁移、禁用、解禁都由 apiserver 完成
+    # 添加一个host到hostList中
+    def addHost(self, host):
+        # 是否需要做合法性检验？
+        self.host_list.append(Host(host))
+
+    # 更新主机列表
+    def update(self):
+        # 要对列表进行筛选，删去不合法的主机列表
+        for host in self.host_list:
+            host.update()
+
+# cluster = Cluster()
+# for host in cluster.host_list:
+#     host.update()
+#     host.getInfo()

@@ -13,6 +13,10 @@ class podInfo:
         self.cpu_load = 0
         self.mem_load = 0
         self.status = 0
+    
+    def __lt__(self, other):
+        # 按照功耗降序
+        return self.power > other.power
 
     def getInfo(self):
         print("pod_name: ", self.pod_name)

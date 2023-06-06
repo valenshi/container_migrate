@@ -4,6 +4,7 @@
 #!/usr/bin/env python3
 from kubernetes import client, config
 import xmlrpc.client
+import subprocess
 
 
 # 直接调用虚拟机迁移脚本或命令
@@ -21,29 +22,35 @@ def excludeHost(host_list):
     # 返回、修改主机的状态
     pass
 
-def migratePod(migrateQueue):
-    # 迁出pod列表，通过重启pod形式
-    print(migrateQueue)
-    # 这里应该分为两类，一种是迁出部分pod，一种是迁出全部pod，两种应该区别对待！
+def migratePod(pod_name):
+    # 迁出pod_name的pod
+    # 通过删除该pod,并重启的方式进行迁出
+    # 命名空间为默认空间
+    # 返回迁移后的主机名
+    print(pod_name)
 
-    # 如果杀死了pod，那么重新启动的pod又如何保证名称相同呢？
-    # 可以通过部署的时候yaml文件来指定默认名称
+    # 挨个迁移每一个pod，阻塞的哦
+    command = ["kubectl", "delete", "pod", pod_name]
+    subprocess.run(command, check=True) # 该命令是阻塞的,非常棒
+    #验证pod的状态,当其为Running时才返回
+    status = getPodStatus(pod_name)
+    while status != "Running":
+        status = getPodStatus(pod_name)
+        if status == "Failed":
+            return "Failed"
+    
+    return getPodHost(pod_name)
 
-    # 直接执行删除命令来删除某个pod
+def banHost(host_name):
+    # 直接执行命令即可, 禁止pod调入
+    command = ["kubectl", "cordon", host_name]
+    subprocess.run(command, check=True)
+    
 
-    # 挨个迁移每一个pod，监控迁移周期，当迁移成功之后才会迁移下一个
-
-    migrateQueue = []
-    return migrateQueue
-
-def banHost(host_list):
-    # 直接执行命令即可
-    pass
-
-def unbanHost(host_list):
-    # 直接执行命令即可
-    pass
-
+def unbanHost(host_name):
+    # 直接执行命令即可, 取消节点限制
+    command = ["kubectl", "uncordon", host_name]
+    subprocess.run(command, check=True)
 
 def getPodStatus(pod_name):
     # Kubernetes中Pod的状态可以分为以下几种：

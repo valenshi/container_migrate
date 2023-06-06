@@ -14,63 +14,81 @@ import apiserver as mAPI
 sys.path.append(home_dir+'/container_migrate/utils')
 from mysqltool import MySQLTool
 
-from clusterInfo import clusterInfo
+from clusterInfo import Cluster
 from podInfo import podInfo
 migrateQueue = [] # 迁移队列, 字符串列表
 banHost = [] # 需要禁用的主机列表
 sleepHost = [] # 需要进入睡眠状态的主机列表
 
 
-def selectPodfromHost(pod_set, hostname):
-    # pod_set: 某台主机上的 podInfo 类的列表
-    # hostname: 主机名称
-    # 从 hostname 主机上筛选出可以迁出的pod列表
-    # 做迁移选择呗，按照cpu利用率升序即可，cpu相同则按照内存升序
-    pass
+def selectPodfromHost(host):
+    # host: Host类型实例
+    # 从host主机上筛选出需要迁出的pod列表并返回即可
+    mpod_list = [] # 存放Pod类型需要迁出的实例集合
+    pod_list = sorted(host.pod_list) # 此处已经重载了pod类型的比较函数, 这里按照功耗降序
+    res_power = host.power
 
-def checkPowerLimit(pod_list, cluser_info):
+    # 将超出功耗的部分迁出
+    while res_power > host.power_limit*0.8:
+        mpod_list.append(pod_list[0])
+        res_power -= pod_list[0].power
+        pod_list.pop(0)
+    
+    return mpod_list
+
+# 返回mhost_list,为迁出主机集
+def checkPowerLimit(host_list):
     # pod_list 是字典类型, key为主机名, value 为 podInfo 类型的列表
     # cluster_info 为 clusterInfo 类的实例
 
     # 检查功耗超限次数是否达到阈值, 如果是则标记该主机, 并且将其中部分pod迁出
-    nodelist = []
-    powerRecord = cluser_info.powerRecord
-    for key, value in powerRecord.item():
-        if value > 8:
-            nodelist.append(key)
+    mhost_list = [] #主机列表,存放Host类型实例
+
+    for host in host_list:
+        if host.power_record >= 0: # 设置超限次数
+            mhost_list.append(host)
         
-    # 此时nodelist是需要迁出的主机列表, 同时也是需要禁用的主机列表
-    for node in nodelist:
-        migrateQueue += selectPodfromHost(pod_list[node], node)
-    
-    # 除此之外还需要导出需要休眠的主机列表
+    # # 此时mhost_list是需要迁出的主机列表, 同时也是需要禁用的主机列表
 
-    # 此时已经获得pod列表, 需要判断迁移列表是否为空 ?
-    return len(migrateQueue)
+    return mhost_list
 
-def checkCost():
-    # 检查能耗价格? 这个似乎无需在意吧 ?
-    # 暂时不实现这个函数
-    return
 
-def beginMigrate():
+def migratePod(mpod_list, mhost_list):
+    # mpod_list: 迁出pod集
+    # mhost_list: 迁出主机集
+
     # 实现迁移逻辑
     # 首先标记禁止迁入迁出的主机
     # 接着触发被动迁移
     # 最后解除主机标记
-    # 问题在于如何获取迁移状态, 即迁移是否完成 ?
+    # 问题在于如何获取迁移状态, 即迁移是否完成 ? 单线程同步
     # 还需要统计每个pod的状态!!!
 
     # 调用迁移接口
-    if len(migrateQueue) == 0:
+    if len(mpod_list) == 0 or len(mhost_list) == 0:
         return
     
-    # 还需要考虑是否要真正的迁移，要处理防误触
+    # 开始迁移
+    # 禁用主机调度(防止调度回源主机)
+    for host in mhost_list:
+        mAPI.banHost(host.host_name)
     
-    migrateQueue = mAPI.migratePod(migrateQueue)
+    # 调出pod
+    for pod in mpod_list:
+        result = mAPI.migratePod(pod.pod_name) # 阻塞,未完成不许返回!
+        if(result == "Failed"):
+            # 打印日志!
+            break
+        print(pod.pod_name + " had migrated from " + pod.host_name + "to " + result + "! ")
+        
+    #解禁主机
+    for host in mhost_list:
+        mAPI.unbanHost(host.host_name)
+    
+    # 异常处理与日志输出?
     return
 
-def getPodFromHost(host_name, ip):
+def getPodFromHost(host_name):
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
     # print(host_name, ip)
     pod_list = []
@@ -97,37 +115,31 @@ def getPodFromHost(host_name, ip):
     return pod_list
 
 def getPodList(host_list):
-    # 构造字典, key为节点名称, value为podInfo类型的列表
+    # 获取host_list中全部的pod,一般用于关闭主机时选择全部pod
     # 从哪儿获得数据呢？从api
     pod_list = []
     
-    for key, value in host_list.items():
-        pod_list += getPodFromHost(key, value)
+    for host in host_list:
+        host.pod_list = getPodFromHost(host.host_name)
+        pod_list += host.pod_list
     return pod_list
 
 def run():
     # 用于实现迁移触发流程，循环检查是否满足触发条件
-    cluster = clusterInfo()
-    pod_list = getPodList(cluster.host_list)
+    cluster = Cluster()
+    # pod_list = getPodList(cluster.host_list)
 
     while True:
-        cluster.update()
-        que = checkPowerLimit(pod_list, cluster)
-        if len(que) > 0:
-            migrateQueue += que
-        beginMigrate()
+        cluster.update() #周期性调用update, 更新record
+        pod_list = getPodList(cluster.host_list) # 更新每个host的podlist
+        mhost_list = checkPowerLimit(cluster.host_list) # 找出功耗超限的主机列表
+        mpod_list = []
+        for host in mhost_list:
+            mpod_list += selectPodfromHost(host)
+
+        migratePod(mpod_list, mhost_list)
+
         time.sleep(10)
 
-
-def testgetPodFromHost():
-    # result = getPodFromHost("node3","")
-    # 用于实现迁移触发流程，循环检查是否满足触发条件
-    cluster = clusterInfo()
-    pod_list = getPodList(cluster.host_list)
-
-    for pod in pod_list:
-        pod.getInfo()
-
-    print(len(pod_list))
-
-testgetPodFromHost()
+# 单线程执行
+run()
