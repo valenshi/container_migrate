@@ -45,7 +45,7 @@ def unbanHost(host_list):
     pass
 
 
-def getStatus(pod_name):
+def getPodStatus(pod_name):
     # Kubernetes中Pod的状态可以分为以下几种：
     # Pending：Pod已被创建，但是尚未被调度到节点上运行。
     # Running：Pod已经被调度到节点上并且正在运行中。
@@ -70,6 +70,27 @@ def getStatus(pod_name):
 
     # 如果Pod存在，则返回其状态
     return pod.status.phase
+
+def getPodHost(pod_name):
+    # 加载Kubeconfig文件
+
+    config.load_kube_config()
+
+    # 创建核心V1 API客户端
+    v1 = client.CoreV1Api()
+
+    # 检查Pod是否存在
+    try:
+        pod = v1.read_namespaced_pod(name=pod_name, namespace='default')
+    except client.rest.ApiException as e:
+        if e.status == 404:
+            return "Overdue"
+        else:
+            raise e
+
+    # 如果Pod存在，则返回其状态
+    return pod.spec.node_name
+
 
 def predictPower(cpu_load, mem_load):
     # 导入预测模块，减去静态功耗

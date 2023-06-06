@@ -87,7 +87,8 @@ def getPodFromHost(host_name, ip):
         pod.host_name = host_name
         pod.cpu_load = dict['cpu_load']
         pod.mem_load = dict['memory_load']
-        pod.status = mAPI.getStatus(pod.pod_name)
+        # pod.status = mAPI.getPodStatus(pod.pod_name)
+        pod.updata() # 更新获取status和host_name
         pod.power = mAPI.predictPower(pod.cpu_load, pod.mem_load)
         if(pod.status != "Overdue"):
             pod_list.append(pod)
