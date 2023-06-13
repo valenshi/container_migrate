@@ -91,6 +91,9 @@ def migratePod(mpod_list, mhost_list):
     return
 
 def getPodFromHost(host_name):
+    print("getPodFromHost: ", host_name)
+    # 从api中获取pod信息
+
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
     # print(host_name, ip)
     pod_list = []
@@ -114,6 +117,7 @@ def getPodFromHost(host_name):
             pod_list.append(pod)
     # 需要更新power与status
     db_tool.close()
+    print(pod_list)
     return pod_list
 
 def getPodList(host_list):
