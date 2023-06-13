@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler('app.log')
+file_handler = logging.FileHandler('selector.log')
 file_handler.setLevel(logging.DEBUG)
 
 # 创建日志格式器
@@ -101,12 +101,14 @@ def migratePod(mpod_list, mhost_list):
         mAPI.banHost(host.host_name)
     
     # 调出pod
+    logger.debug('migratePod: start to migrate pods: ')
     for pod in mpod_list:
         result = mAPI.migratePod(pod.pod_name) # 阻塞,未完成不许返回!
         if(result == "Failed"):
             # 打印日志!
             break
-        print(pod.pod_name + " had migrated from " + pod.host_name + "to " + result + "! ")
+        # 将迁移信息打印到日志
+        logger.debug('migratePod: {} migrate from {}, status: {}'.format(pod.pod_name, pod.host_name, result))
         
     #解禁主机
     for host in mhost_list:
@@ -118,7 +120,6 @@ def migratePod(mpod_list, mhost_list):
 def getPodFromHost(host_name):
     logger.debug('getPodFromHost: {}'.format(host_name))    # 从api中获取pod信息
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
-    # print(host_name, ip)
     pod_list = []
     # 从数据库中获取也是可以的
     db_tool = MySQLTool(host='192.168.1.201', username='ecm', password='123456', database='ecm')
@@ -127,7 +128,6 @@ def getPodFromHost(host_name):
     # ALTER TABLE latest_poddata CHANGE node_name ip 
     result = db_tool.select('latest_poddata', columns=['*'], where="node_name='"+host_name + "'")
     for dict in result:
-        # print(dict)
         pod = podInfo()
         pod.pod_name = dict['pod_name']
         pod.host_name = host_name
@@ -140,7 +140,7 @@ def getPodFromHost(host_name):
             pod_list.append(pod)
     # 需要更新power与status
     db_tool.close()
-    print(pod_list)
+    logger.debug('getPodFromHost: {}'.format(pod_list))
     return pod_list
 
 def getPodList(host_list):
@@ -159,14 +159,14 @@ def run():
     # pod_list = getPodList(cluster.host_list)
 
     while True:
-        print(cluster.host_list)
+        logger.debug('cluster.host_list: ')
         for host in cluster.host_list:
-            logger.debug(host.getInfo())
+            logger.debug(host.getInfo()) # 打印主机日志
         
         cluster.update() #周期性调用update, 更新record
         pod_list = getPodList(cluster.host_list) # 更新每个host的podlist
         mhost_list = checkPowerLimit(cluster.host_list) # 找出功耗超限的主机列表
-        mpod_list = []
+        mpod_list = [] # 待迁移的pod列表
         for host in mhost_list:
             mpod_list += selectPodfromHost(host)
         migratePod(mpod_list, mhost_list)

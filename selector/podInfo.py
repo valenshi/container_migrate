@@ -19,12 +19,15 @@ class podInfo:
         return self.power > other.power
 
     def getInfo(self):
-        print("pod_name: ", self.pod_name)
-        print("host_name: ", self.host_name)
-        print("power: ", self.power)
-        print("cpu_load: ", self.cpu_load)
-        print("mem_load: ", self.mem_load)
-        print("status: ", self.status)
+        ret = {}
+        ret['pod_name'] = self.pod_name
+        ret['host_name'] = self.host_name
+        ret['power'] = self.power
+        ret['cpu_load'] = self.cpu_load
+        ret['mem_load'] = self.mem_load
+        ret['status'] = self.status
+
+        return ret
 
     def updata(self):
         # 主要是更新status
