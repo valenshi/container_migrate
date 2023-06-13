@@ -139,12 +139,14 @@ def run():
             print("-----------------------------")
         
         cluster.update() #周期性调用update, 更新record
+        print("getPodList")
         pod_list = getPodList(cluster.host_list) # 更新每个host的podlist
+        print("checkPowerLimit")
         mhost_list = checkPowerLimit(cluster.host_list) # 找出功耗超限的主机列表
         mpod_list = []
         for host in mhost_list:
             mpod_list += selectPodfromHost(host)
-
+        print("migratePod")
         migratePod(mpod_list, mhost_list)
 
         time.sleep(10)
