@@ -126,18 +126,20 @@ class Host:
 
     # 打印相关信息操作
     def getInfo(self):
-        print("host_name: ", self.host_name)
-        print("ip: ", self.ip)
-        print("power_limit: ", self.power_limit)
-        print("energy_cost: ", self.energy_cost)
-        print("host_status:", self.host_status)
-        print("power: ", self.power)
-        print("cpu_load: ", self.cpu_load)
-        print("mem_load: ", self.mem_load)
-        print("cpu_record: ", self.cpu_record)
-        print("mem_record: ",self.mem_record)
-        print("power_record: ", self.power_record)
-        print("------------------------END-------------------------")
+        ret = {}
+        ret['host_name'] = self.host_name
+        ret['ip'] = self.ip
+        ret['power_limit'] = self.power_limit
+        ret['energy_cost'] = self.energy_cost
+        ret['host_status'] = self.host_status
+        ret['power'] = self.power
+        ret['cpu_load'] = self.cpu_load
+        ret['mem_load'] = self.mem_load
+        ret['cpu_record'] = self.cpu_record
+        ret['mem_record'] = self.mem_record
+        ret['power_record'] = self.power_record
+        return ret
+    
     
 
 # 使用流程:

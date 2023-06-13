@@ -7,6 +7,31 @@ import os
 import sys
 import time
 import pymysql
+import logging
+
+# 创建日志记录器
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.DEBUG)
+
+# 创建日志处理器并设置级别
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.DEBUG)
+
+# 创建日志格式器
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# 将格式器添加到处理器
+console_handler.setFormatter(formatter)
+file_handler.setFormatter(formatter)
+
+# 将处理器添加到记录器
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+
 
 home_dir = os.path.expanduser("~")
 sys.path.append(home_dir+'/container_migrate/migrate')
@@ -91,9 +116,7 @@ def migratePod(mpod_list, mhost_list):
     return
 
 def getPodFromHost(host_name):
-    print("getPodFromHost: ", host_name)
-    # 从api中获取pod信息
-
+    logger.debug('getPodFromHost: {}'.format(host_name))    # 从api中获取pod信息
     # 通过mysql来获得host_name上的所有pod信息，这些信息都是podInfo类型的
     # print(host_name, ip)
     pod_list = []
@@ -136,21 +159,16 @@ def run():
     # pod_list = getPodList(cluster.host_list)
 
     while True:
-        print("start to update cluster...")
         print(cluster.host_list)
         for host in cluster.host_list:
-            host.getInfo()
-            print("-----------------------------")
+            logger.debug(host.getInfo())
         
         cluster.update() #周期性调用update, 更新record
-        print("getPodList")
         pod_list = getPodList(cluster.host_list) # 更新每个host的podlist
-        print("checkPowerLimit")
         mhost_list = checkPowerLimit(cluster.host_list) # 找出功耗超限的主机列表
         mpod_list = []
         for host in mhost_list:
             mpod_list += selectPodfromHost(host)
-        print("migratePod")
         migratePod(mpod_list, mhost_list)
 
         time.sleep(10)
