@@ -33,6 +33,8 @@ def selectPodfromHost(host):
         mpod_list.append(pod_list[0])
         res_power -= pod_list[0].power
         pod_list.pop(0)
+        if len(pod_list) == 0:
+            break
     
     return mpod_list
 
@@ -55,7 +57,7 @@ def checkPowerLimit(host_list):
 
 def migratePod(mpod_list, mhost_list):
     # mpod_list: 迁出pod集
-    # mhost_list: 迁出主机集
+    # mhost_list: 迁出主机集0
 
     # 实现迁移逻辑
     # 首先标记禁止迁入迁出的主机
@@ -130,6 +132,12 @@ def run():
     # pod_list = getPodList(cluster.host_list)
 
     while True:
+        print("start to update cluster...")
+        print(cluster.host_list)
+        for host in cluster.host_list:
+            host.getInfo()
+            print("-----------------------------")
+        
         cluster.update() #周期性调用update, 更新record
         pod_list = getPodList(cluster.host_list) # 更新每个host的podlist
         mhost_list = checkPowerLimit(cluster.host_list) # 找出功耗超限的主机列表
