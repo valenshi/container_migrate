@@ -1,0 +1,39 @@
+2023-06-13 18:58:52,366 - DEBUG - cluster.host_list: 
+2023-06-13 18:58:52,367 - DEBUG - {'host_name': 'node1', 'ip': '192.168.1.201', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:58:52,367 - DEBUG - {'host_name': 'node2', 'ip': '192.168.1.202', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:58:52,367 - DEBUG - {'host_name': 'node3', 'ip': '192.168.1.203', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:58:52,367 - DEBUG - {'host_name': 'node4', 'ip': '192.168.1.204', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:58:52,889 - DEBUG - getPodFromHost: node1
+2023-06-13 18:58:52,897 - DEBUG - getPodFromHost: []
+2023-06-13 18:58:52,897 - DEBUG - getPodFromHost: node2
+2023-06-13 18:58:52,902 - DEBUG - getPodFromHost: []
+2023-06-13 18:58:52,902 - DEBUG - getPodFromHost: node3
+2023-06-13 18:59:11,302 - DEBUG - getPodFromHost: []
+2023-06-13 18:59:11,303 - DEBUG - getPodFromHost: node4
+2023-06-13 18:59:11,308 - DEBUG - getPodFromHost: []
+2023-06-13 18:59:21,317 - DEBUG - cluster.host_list: 
+2023-06-13 18:59:21,318 - DEBUG - {'host_name': 'node1', 'ip': '192.168.1.201', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 471.33, 'cpu_load': 3.81, 'mem_load': 48.79, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:59:21,318 - DEBUG - {'host_name': 'node2', 'ip': '192.168.1.202', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 301.21, 'cpu_load': 2.33, 'mem_load': 17.49, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:59:21,318 - DEBUG - {'host_name': 'node3', 'ip': '192.168.1.203', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 301.21, 'cpu_load': 1.79, 'mem_load': 15.34, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:59:21,318 - DEBUG - {'host_name': 'node4', 'ip': '192.168.1.204', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 229.38, 'cpu_load': 1.0, 'mem_load': 12.26, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-13 18:59:21,849 - DEBUG - getPodFromHost: node1
+2023-06-13 18:59:21,855 - DEBUG - getPodFromHost: []
+2023-06-13 18:59:21,855 - DEBUG - getPodFromHost: node2
+2023-06-13 18:59:21,861 - DEBUG - getPodFromHost: []
+2023-06-13 18:59:21,861 - DEBUG - getPodFromHost: node3
+2023-06-13 18:59:40,502 - DEBUG - getPodFromHost: []
+2023-06-13 18:59:40,502 - DEBUG - getPodFromHost: node4
+2023-06-13 18:59:40,507 - DEBUG - getPodFromHost: []
+2023-06-14 17:55:58,372 - DEBUG - cluster.host_list: 
+2023-06-14 17:55:58,372 - DEBUG - {'host_name': 'node1', 'ip': '192.168.1.201', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-14 17:55:58,372 - DEBUG - {'host_name': 'node2', 'ip': '192.168.1.202', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-14 17:55:58,372 - DEBUG - {'host_name': 'node3', 'ip': '192.168.1.203', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-14 17:55:58,373 - DEBUG - {'host_name': 'node4', 'ip': '192.168.1.204', 'power_limit': 1000.0, 'energy_cost': 2.0, 'host_status': 'unkown', 'power': 0.0, 'cpu_load': 0.0, 'mem_load': 0.0, 'cpu_record': 0, 'mem_record': 0, 'power_record': 0}
+2023-06-14 17:55:58,904 - DEBUG - getPodFromHost: node1
+2023-06-14 17:55:58,912 - DEBUG - getPodFromHost: []
+2023-06-14 17:55:58,912 - DEBUG - getPodFromHost: node2
+2023-06-14 17:55:58,917 - DEBUG - getPodFromHost: []
+2023-06-14 17:55:58,918 - DEBUG - getPodFromHost: node3
+2023-06-14 17:56:17,770 - DEBUG - getPodFromHost: []
+2023-06-14 17:56:17,770 - DEBUG - getPodFromHost: node4
+2023-06-14 17:56:17,779 - DEBUG - getPodFromHost: []
